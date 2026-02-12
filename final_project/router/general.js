@@ -40,59 +40,67 @@ Promise.resolve(books)
 // Get book details based on ISBN
 public_users.get('/isbn/:isbn',function (req, res) {
   //Write your code here
-  const isbn = req.params.isbn;
+const isbn = req.params.isbn;
 
-    if (books[isbn]) {
-        return res.status(200).json(books[isbn]);
-    } else {
-        return res.status(404).json({ message: `Book with ISBN ${isbn} not found` });
-    }
+  Promise.resolve(books[isbn])
+    .then(bookData => {
+      if (bookData) {
+        res.status(200).json(bookData);
+      } else {
+        res.status(404).json({ message: `Book with ISBN ${isbn} not found` });
+      }
+    })
+    .catch(err => {
+      res.status(500).json({ message: "Unable to fetch book details", error: err.message });
+    });
  });
   
 // Get book details based on author
 public_users.get('/author/:author',function (req, res) {
-const authorQuery = req.params.author.toLowerCase();  // Make search case-insensitive
-    const matchingBooks = {};
+const authorQuery = req.params.author.toLowerCase();
 
-    // 1️⃣ Get all keys of the books object
-    const bookKeys = Object.keys(books);  // Each key is an ISBN
-
-    // 2️⃣ Iterate through the books and check the author
-    bookKeys.forEach(isbn => {
-        if (books[isbn].author.toLowerCase() === authorQuery) {
-            matchingBooks[isbn] = books[isbn];  // Add to matching books
+  Promise.resolve(books)
+    .then(allBooks => {
+      const matchingBooks = {};
+      Object.keys(allBooks).forEach(isbn => {
+        if (allBooks[isbn].author.toLowerCase() === authorQuery) {
+          matchingBooks[isbn] = allBooks[isbn];
         }
-    });
+      });
 
-    // Return results
-    if (Object.keys(matchingBooks).length > 0) {
-        return res.status(200).json(matchingBooks);
-    } else {
-        return res.status(404).json({ message: `No books found by author: ${req.params.author}` });
-    }
+      if (Object.keys(matchingBooks).length > 0) {
+        res.status(200).json(matchingBooks);
+      } else {
+        res.status(404).json({ message: `No books found by author: ${req.params.author}` });
+      }
+    })
+    .catch(err => {
+      res.status(500).json({ message: "Unable to fetch books by author", error: err.message });
+    });
 });
 
 // Get all books based on title
 public_users.get('/title/:title',function (req, res) {
-  const titleQuery = req.params.title.toLowerCase();  // Make search case-insensitive
-    const matchingBooks = {};
+  const titleQuery = req.params.title.toLowerCase();
 
-    // Get all keys (ISBNs) of the books object
-    const bookKeys = Object.keys(books);
-
-    // Iterate through all books and check if title matches
-    bookKeys.forEach(isbn => {
-        if (books[isbn].title.toLowerCase() === titleQuery) {
-            matchingBooks[isbn] = books[isbn];
+  Promise.resolve(books)
+    .then(allBooks => {
+      const matchingBooks = {};
+      Object.keys(allBooks).forEach(isbn => {
+        if (allBooks[isbn].title.toLowerCase() === titleQuery) {
+          matchingBooks[isbn] = allBooks[isbn];
         }
-    });
+      });
 
-    // Return matching books or 404
-    if (Object.keys(matchingBooks).length > 0) {
-        return res.status(200).json(matchingBooks);
-    } else {
-        return res.status(404).json({ message: `No books found with title: ${req.params.title}` });
-    }
+      if (Object.keys(matchingBooks).length > 0) {
+        res.status(200).json(matchingBooks);
+      } else {
+        res.status(404).json({ message: `No books found with title: ${req.params.title}` });
+      }
+    })
+    .catch(err => {
+      res.status(500).json({ message: "Unable to fetch books by title", error: err.message });
+    });
 });
 
 //  Get book review
